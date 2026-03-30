@@ -1,0 +1,25 @@
+# STM32CubeIDE build artefacts
+Debug/
+Release/
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
+*.su
+*.cyclo
+*.d
+*.o
+
+# CubeMX / IDE project files (regenerated from .ioc)
+Drivers/
+Middlewares/
+FATFS/
+USB_DEVICE/
+*.ioc
+
+# Editor / OS
+.DS_Store
+.vscode/
+.settings/
+*.swp
