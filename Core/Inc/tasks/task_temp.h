@@ -1,9 +1,9 @@
 /**
  * @file    tasks/task_temp.h
- * @brief   LM75 temperature + SHT30 humidity task — 10 Hz periodic read.
+ * @brief   Sensor-A temperature + Sensor-C humidity task — 10 Hz periodic read.
  *
- * Iterates over all discovered LM75 sensors and the single SHT30.
- * Uses vTaskDelayUntil at LM75_PERIOD_MS (100 ms).
+ * Iterates over all discovered Sensor-A sensors and the single Sensor-C.
+ * Uses vTaskDelayUntil at SENSOR_A_PERIOD_MS (100 ms).
  */
 
 #ifndef TASKS_TASK_TEMP_H

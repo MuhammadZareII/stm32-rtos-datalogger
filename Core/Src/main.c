@@ -13,9 +13,9 @@
  *
  * Task priority summary (higher = more urgent):
  *
- *   TASK_PRIO_ACCEL    6   ADXL345 read at 100 Hz
+ *   TASK_PRIO_ACCEL    6   Sensor-B read at 100 Hz
  *   TASK_PRIO_GPS      5   GPS poll at 5 Hz
- *   TASK_PRIO_TEMP     4   LM75 + SHT30 read at 10 Hz
+ *   TASK_PRIO_TEMP     4   Sensor-A + Sensor-C read at 10 Hz
  *   TASK_PRIO_LOGGER   3   SD write at 10 Hz, RS232 at 2 Hz
  *   TASK_PRIO_WATCHDOG 2   IWDG feed every 500 ms
  *   TASK_PRIO_SCAN     1   Hot-plug I²C scan every 2 s

@@ -1,8 +1,8 @@
 # stm32-rtos-datalogger
 
-FreeRTOS-based multi-sensor data logger for the STM32H743IITx.
+FreeRTOS-based multi-sensor data logger for STM32H7.
 
-Reads temperature (LM75), acceleration (ADXL345), humidity (SHT30), and GPS (u-blox I²C DDC) from a custom hardware board with I²C bus extenders, logs binary telemetry packets to a raw SD card, and transmits over RS232 to a ground-station computer.
+Reads temperature (Sensor-A), acceleration (Sensor-B), humidity (Sensor-C), and GPS (I²C DDC) from a custom hardware board with I²C bus extenders, logs binary telemetry packets to a raw SD card, and transmits over RS232 to a ground-station computer.
 
 > **Note:** This repository is a structural reference implementation showing the RTOS task architecture. The peripheral initialisation (CubeMX-generated `MX_*` functions) and the proprietary SD raw-sector writer are intentionally not included. The sensor drivers are complete register-level implementations.
 
@@ -12,16 +12,16 @@ Reads temperature (LM75), acceleration (ADXL345), humidity (SHT30), and GPS (u-b
 
 | Component          | Details                                                   |
 |--------------------|-----------------------------------------------------------|
-| MCU                | STM32H743IITx (Cortex-M7, 480 MHz)                       |
-| I²C buses          | 4 × (I2C1–I2C4), extended via PCA9548A multiplexers      |
-| Temperature        | Up to 6 × LM75A on any bus (addresses 0x48–0x4F)         |
-| Accelerometer      | Up to 4 × ADXL345 on any bus (addresses 0x53 / 0x1D)     |
-| Humidity           | 1 × SHT30 on I2C3 (address 0x44)                         |
-| GPS                | u-blox NEO-M8N via I²C DDC bridge on I2C3                 |
-| Storage            | SDMMC1 — raw sector writes (no filesystem)                |
-| Telemetry          | USART6 → RS232 converter → ground station PC              |
-| Debug              | USART1 / USB-CDC                                          |
-| Watchdog           | IWDG1 (~800 ms timeout)                                   |
+| MCU                | STM32H7 series (Cortex-M7)                               |
+| I²C buses          | 4 × I²C buses, extended via I²C multiplexers             |
+| Temperature        | Up to 6 × Sensor-A sensors across all buses                  |
+| Accelerometer      | Up to 4 × Sensor-B sensors across all buses               |
+| Humidity           | 1 × Sensor-C humidity sensor                                |
+| GPS                | GPS module via I²C DDC bridge                            |
+| Storage            | SDMMC — raw sector writes (no filesystem)                 |
+| Telemetry          | USART → RS232 converter → ground station PC              |
+| Debug              | USART / USB-CDC                                           |
+| Watchdog           | IWDG                                                      |
 
 ---
 
@@ -29,9 +29,9 @@ Reads temperature (LM75), acceleration (ADXL345), humidity (SHT30), and GPS (u-b
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  Priority 6 │  task_accel   │  ADXL345   │  100 Hz       │
+│  Priority 6 │  task_accel   │  Sensor-B   │  100 Hz       │
 │  Priority 5 │  task_gps     │  GPS        │    5 Hz       │
-│  Priority 4 │  task_temp    │  LM75+SHT30 │   10 Hz       │
+│  Priority 4 │  task_temp    │  Sensor-A+Sensor-C │   10 Hz       │
 │  Priority 3 │  task_logger  │  SD + RS232 │ 10/2 Hz       │
 │  Priority 2 │  task_watchdog│  IWDG feed  │    2 Hz       │
 │  Priority 1 │  task_scan    │  I²C scan   │  0.5 Hz       │
@@ -47,19 +47,11 @@ All inter-task shared state is protected by FreeRTOS mutexes.  Sensor tasks writ
 
 ## Packet Format
 
-Binary, fixed 70 bytes, little-endian:
+Fixed-size binary packet, little-endian, with a 3-byte header and 3-byte footer for framing.
 
-```
-[0xAA 0xBB 0xCC] [timestamp:u32] [flight:u16]
-[lm75_count:u8]  [lm75_temp×6:f32]
-[adxl_count:u8]  [ax×4:f32] [ay×4:f32] [az×4:f32]
-[sht30_present:u8] [humidity:f32] [temperature:f32]
-[gps_fix:u8] [lat:f32] [lon:f32] [alt:f32] [speed:f32] [utc:10c]
-[failure_code:u8]
-[0xDD 0xEE 0xFF]
-```
+Fields (in order): timestamp, flight/session counter, temperature readings (×6 slots), accelerometer readings (×4 slots, three axes each), humidity and humidity-sensor temperature, GPS fix, position, altitude, speed, UTC time, and a failure bitmask.
 
-The same packet is written to raw SD sectors and transmitted over RS232.
+See `Core/Inc/packet.h` for the full struct definition. The same packet is written to raw SD sectors and transmitted over RS232.
 
 ---
 
@@ -78,7 +70,7 @@ Core/
     ├── main.c                ← hardware init + task creation + scheduler start
     ├── shared_data.c         ← global instance definitions
     ├── packet.c              ← packet build + serialise
-    ├── drivers/              ← LM75, ADXL345, SHT30, GPS I²C implementations
+    ├── drivers/              ← Sensor-A, Sensor-B, Sensor-C, GPS I²C implementations
     └── tasks/                ← FreeRTOS task bodies
 docs/
 └── architecture.md

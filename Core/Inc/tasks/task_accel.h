@@ -1,8 +1,8 @@
 /**
  * @file    tasks/task_accel.h
- * @brief   ADXL345 accelerometer task — highest-priority periodic read.
+ * @brief   Sensor-B accelerometer task — highest-priority periodic read.
  *
- * Runs at ADXL345_PERIOD_MS (10 ms = 100 Hz) using vTaskDelayUntil for
+ * Runs at SENSOR_B_PERIOD_MS (10 ms = 100 Hz) using vTaskDelayUntil for
  * jitter-free timing.  Writes results to globalSensorData under
  * sensor_data_mutex.
  */

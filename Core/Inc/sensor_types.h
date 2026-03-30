@@ -28,29 +28,29 @@ typedef struct {
 
 /* ── Per-sensor data types ──────────────────────────────────────────────────── */
 
-/** LM75 temperature sensor reading */
+/** Sensor-A temperature sensor reading */
 typedef struct {
     SensorID_t  id;
     float       temperature_c;      /**< Celsius; INVALID_FLOAT if not yet read */
     uint32_t    last_read_tick;     /**< HAL_GetTick() at last successful read   */
-} LM75_t;
+} SensorA_t;
 
-/** ADXL345 3-axis accelerometer reading */
+/** Sensor-B 3-axis accelerometer reading */
 typedef struct {
     SensorID_t  id;
     float       ax;                 /**< m/s²; INVALID_FLOAT if not yet read     */
     float       ay;
     float       az;
     uint32_t    last_read_tick;
-} ADXL345_t;
+} SensorB_t;
 
-/** SHT30 humidity sensor reading */
+/** Sensor-C humidity sensor reading */
 typedef struct {
     SensorID_t  id;
     float       humidity_pct;       /**< % RH; INVALID_FLOAT if not yet read     */
-    float       temperature_c;      /**< SHT30 also provides temperature         */
+    float       temperature_c;      /**< Sensor-C also provides temperature         */
     uint32_t    last_read_tick;
-} SHT30_t;
+} SensorC_t;
 
 /* ── GPS data ───────────────────────────────────────────────────────────────── */
 
@@ -84,16 +84,16 @@ typedef struct {
  * Access is guarded by sensor_data_mutex (see shared_data.h).
  */
 typedef struct {
-    LM75_t    lm75[MAX_LM75];
-    uint8_t   lm75_count;
+    SensorA_t    sensor_a[MAX_SENSOR_A];
+    uint8_t   sensor_a_count;
 
-    ADXL345_t adxl[MAX_ADXL345];
-    uint8_t   adxl_count;
+    SensorB_t sensor_b[MAX_SENSOR_B];
+    uint8_t   sensor_b_count;
 
-    SHT30_t   sht30;
-    uint8_t   sht30_present;
+    SensorC_t   sensor_c;
+    uint8_t   sensor_c_present;
 
-    uint8_t   failure_code;         /**< Bitmask: bit 0=LM75, 1=ADXL, 2=SHT30, 3=GPS */
+    uint8_t   failure_code;         /**< Bitmask: bit 0=Sensor-A, 1=Sensor-B, 2=Sensor-C, 3=GPS */
 } SensorData_t;
 
 #endif /* SENSOR_TYPES_H */

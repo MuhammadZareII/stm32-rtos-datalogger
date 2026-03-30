@@ -16,7 +16,7 @@
  * Usage pattern (FreeRTOS):
  * @code
  *   if (xSemaphoreTake(sensor_data_mutex, pdMS_TO_TICKS(10)) == pdTRUE) {
- *       globalSensorData.lm75[0].temperature_c = reading;
+ *       globalSensorData.sensor_a[0].temperature_c = reading;
  *       xSemaphoreGive(sensor_data_mutex);
  *   }
  * @endcode

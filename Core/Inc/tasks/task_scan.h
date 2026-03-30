@@ -2,7 +2,7 @@
  * @file    tasks/task_scan.h
  * @brief   I²C hot-plug scan task — background sensor discovery.
  *
- * Scans all four I²C buses for LM75, ADXL345, and SHT30 address ranges
+ * Scans all four I²C buses for Sensor-A, Sensor-B, and Sensor-C address ranges
  * every SCAN_PERIOD_MS (2000 ms).  Newly found devices are added to
  * globalSensorData; devices that no longer ACK are marked absent.
  *

@@ -6,30 +6,12 @@
  * the RS232 link at LOG_RS232_HZ.  The receiver on the ground-station PC
  * deserialises the same struct.
  *
- * Wire layout (fixed 70 bytes, little-endian):
- * ┌──────────────────────────────────────────────────────────────────┐
- * │ Byte(s) │ Field                                                  │
- * ├─────────┼────────────────────────────────────────────────────────┤
- * │  0–2    │ Header  0xAA 0xBB 0xCC                                 │
- * │  3–6    │ Timestamp  uint32_t  HAL_GetTick() ms since boot       │
- * │  7–8    │ Flight number  uint16_t                                │
- * │  9      │ LM75 count  uint8_t                                    │
- * │ 10–33   │ LM75[0..5]  float temperature (4 B each)  × 6         │
- * │ 34      │ ADXL count  uint8_t                                    │
- * │ 35–58   │ ADXL[0..3]  float ax, ay, az (12 B each) × 4         │
- * │ 59      │ SHT30 present  uint8_t                                 │
- * │ 60–63   │ SHT30 humidity_pct  float                             │
- * │ 64      │ GPS fix_type  uint8_t                                  │
- * │ 65–68   │ GPS latitude  float                                    │
- * │ ... (truncated to PKT_MAX_BYTES with footer)                    │
- * │ 67–69   │ Footer  0xDD 0xEE 0xFF                                 │
- * └──────────────────────────────────────────────────────────────────┘
- *
- * Notes:
- * - All floats are IEEE 754 single precision.
- * - Unused sensor slots are filled with INVALID_FLOAT (0xC077800000).
- * - The packet is padded to PKT_MAX_BYTES so the receiver can use fixed
- *   offsets without parsing variable-length fields.
+ * The packet is fixed-size, little-endian, #pragma pack(1).  It begins with
+ * a 3-byte header magic sequence and ends with a 3-byte footer magic sequence
+ * (values defined in app_config.h).  All floats are IEEE 754 single precision.
+ * Unused sensor slots are filled with INVALID_FLOAT.
+ * The packet is padded to PKT_MAX_BYTES so the receiver can use fixed
+ * offsets without parsing variable-length fields.
  */
 
 #ifndef PACKET_H
@@ -45,26 +27,26 @@
 
 typedef struct {
     /* Header */
-    uint8_t  header[3];             /**< { 0xAA, 0xBB, 0xCC }                  */
+    uint8_t  header[3];             /**< PKT_HEADER_0/1/2 magic bytes           */
 
     /* Timing */
     uint32_t timestamp_ms;          /**< HAL_GetTick() at packet build time     */
     uint16_t flight_number;         /**< Increments on each power cycle         */
 
     /* Temperature */
-    uint8_t  lm75_count;
-    float    lm75_temp[MAX_LM75];   /**< °C; INVALID_FLOAT if slot unused       */
+    uint8_t  sensor_a_count;
+    float    sensor_a_temp[MAX_SENSOR_A];   /**< °C; INVALID_FLOAT if slot unused       */
 
     /* Acceleration */
-    uint8_t  adxl_count;
-    float    adxl_ax[MAX_ADXL345];
-    float    adxl_ay[MAX_ADXL345];
-    float    adxl_az[MAX_ADXL345];
+    uint8_t  sensor_b_count;
+    float    sensor_b_ax[MAX_SENSOR_B];
+    float    sensor_b_ay[MAX_SENSOR_B];
+    float    sensor_b_az[MAX_SENSOR_B];
 
     /* Humidity */
-    uint8_t  sht30_present;
-    float    sht30_humidity;        /**< % RH                                   */
-    float    sht30_temperature;     /**< °C (SHT30 internal sensor)             */
+    uint8_t  sensor_c_present;
+    float    sensor_c_humidity;        /**< % RH                                   */
+    float    sensor_c_temperature;     /**< °C (Sensor-C internal sensor)             */
 
     /* GPS */
     uint8_t  gps_fix;
@@ -78,7 +60,7 @@ typedef struct {
     uint8_t  failure_code;          /**< Bitmask from SensorData_t              */
 
     /* Footer */
-    uint8_t  footer[3];             /**< { 0xDD, 0xEE, 0xFF }                  */
+    uint8_t  footer[3];             /**< PKT_FOOTER_0/1/2 magic bytes           */
 } TelemetryPacket_t;
 
 #pragma pack(pop)

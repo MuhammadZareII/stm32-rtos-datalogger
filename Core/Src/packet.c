@@ -28,35 +28,35 @@ void packet_build(TelemetryPacket_t       *pkt,
     pkt->flight_number = flight_num;
 
     /* Temperature */
-    pkt->lm75_count = sensors->lm75_count;
-    for (uint8_t i = 0; i < MAX_LM75; i++)
-        pkt->lm75_temp[i] = (i < sensors->lm75_count)
-                            ? sensors->lm75[i].temperature_c
+    pkt->sensor_a_count = sensors->sensor_a_count;
+    for (uint8_t i = 0; i < MAX_SENSOR_A; i++)
+        pkt->sensor_a_temp[i] = (i < sensors->sensor_a_count)
+                            ? sensors->sensor_a[i].temperature_c
                             : INVALID_FLOAT;
 
     /* Acceleration */
-    pkt->adxl_count = sensors->adxl_count;
-    for (uint8_t i = 0; i < MAX_ADXL345; i++)
+    pkt->sensor_b_count = sensors->sensor_b_count;
+    for (uint8_t i = 0; i < MAX_SENSOR_B; i++)
     {
-        if (i < sensors->adxl_count)
+        if (i < sensors->sensor_b_count)
         {
-            pkt->adxl_ax[i] = sensors->adxl[i].ax;
-            pkt->adxl_ay[i] = sensors->adxl[i].ay;
-            pkt->adxl_az[i] = sensors->adxl[i].az;
+            pkt->sensor_b_ax[i] = sensors->sensor_b[i].ax;
+            pkt->sensor_b_ay[i] = sensors->sensor_b[i].ay;
+            pkt->sensor_b_az[i] = sensors->sensor_b[i].az;
         }
         else
         {
-            pkt->adxl_ax[i] = pkt->adxl_ay[i] = pkt->adxl_az[i] = INVALID_FLOAT;
+            pkt->sensor_b_ax[i] = pkt->sensor_b_ay[i] = pkt->sensor_b_az[i] = INVALID_FLOAT;
         }
     }
 
     /* Humidity */
-    pkt->sht30_present     = sensors->sht30_present;
-    pkt->sht30_humidity    = sensors->sht30_present
-                             ? sensors->sht30.humidity_pct
+    pkt->sensor_c_present     = sensors->sensor_c_present;
+    pkt->sensor_c_humidity    = sensors->sensor_c_present
+                             ? sensors->sensor_c.humidity_pct
                              : INVALID_FLOAT;
-    pkt->sht30_temperature = sensors->sht30_present
-                             ? sensors->sht30.temperature_c
+    pkt->sensor_c_temperature = sensors->sensor_c_present
+                             ? sensors->sensor_c.temperature_c
                              : INVALID_FLOAT;
 
     /* GPS */

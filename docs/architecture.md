@@ -16,17 +16,17 @@ The RTOS version replaces the super-loop with one task per rate class, each usin
 
 The highest-rate task. Uses `vTaskDelayUntil(&xLastWakeTime, 10ms)` which guarantees that the next wake-up is computed from the *intended* wake time, not the *actual* wake time. If the task overruns its slot by 1 ms, it still wakes 9 ms later (not 10 ms later), keeping the 100 Hz cadence precise.
 
-I²C read time for 4 ADXL345 units at 400 kHz: ~800 µs. Mutex hold time: ~800 µs. Remaining slack: ~9.2 ms.
+I²C read time for 4 Sensor-B units at 400 kHz: ~800 µs. Mutex hold time: ~800 µs. Remaining slack: ~9.2 ms.
 
 ### `task_gps` — 5 Hz, Priority 5
 
 GPS ranked above temperature because GPS timestamps are used to anchor all other data to real-world UTC time in the packet. A fresh GPS timestamp on every 200 ms cycle is more valuable than knowing the temperature to within the next 100 ms.
 
-The GPS driver reads up to 512 bytes per call from the u-blox DDC FIFO, accumulating NMEA lines across calls. A single call typically processes 1–3 complete sentences.
+The GPS driver reads up to 512 bytes per call from the module's DDC FIFO, accumulating NMEA lines across calls. A single call typically processes 1–3 complete sentences.
 
 ### `task_temp` — 10 Hz, Priority 4
 
-Handles both LM75 (simple register read) and SHT30 (command-response with a 20 ms measurement delay). The SHT30 measurement delay is handled by `HAL_Delay(20)` inside the driver — a known inefficiency that could be improved by splitting trigger and read into separate task iterations using a state machine.
+Handles both Sensor-A (simple register read) and Sensor-C (command-response with a 20 ms measurement delay). The Sensor-C measurement delay is handled by `HAL_Delay(20)` inside the driver — a known inefficiency that could be improved by splitting trigger and read into separate task iterations using a state machine.
 
 ### `task_logger` — 10 Hz SD / 2 Hz RS232, Priority 3
 
@@ -38,7 +38,7 @@ SD hot-plug: `sd_writer_check_card()` reads the SD_DETECT GPIO pin. If the card 
 
 ### `task_watchdog` — 2 Hz, Priority 2
 
-Feeds `hiwdg1` every 500 ms. The IWDG is configured for a ~800 ms timeout (prescaler 64, reload 512). This leaves 300 ms of margin. If the watchdog task is starved for more than 300 ms, the system resets — indicating a deadlock or runaway task.
+Feeds the IWDG every 500 ms. The watchdog is configured with enough margin that if the watchdog task is starved, the system resets — indicating a deadlock or runaway task.
 
 ### `task_scan` — 0.5 Hz, Priority 1
 
@@ -70,15 +70,15 @@ Fixed-size packets (70 bytes) were chosen over variable-length because:
 - Raw SD sector writes are 512 bytes; exactly 7 packets fit per sector (7 × 70 = 490 bytes, 22 bytes padding)
 - RS232 at 9600 baud can transmit one 70-byte packet in ~72 ms, well within the 500 ms period
 
-The 3-byte header / footer magic sequence (0xAA 0xBB 0xCC / 0xDD 0xEE 0xFF) was chosen to be easily identifiable in a hex dump and statistically unlikely to appear in valid float data.
+A 3-byte header and 3-byte footer magic sequence bracket each packet, chosen to be easily identifiable in a hex dump and statistically unlikely to appear in valid float data.
 
 ---
 
 ## I²C Bus Architecture
 
-The custom hardware uses 4 physical I²C buses (I2C1–I2C4), each expanded via PCA9548A I²C multiplexers to reach more sensors than the 8-address limit of a single bus allows. The firmware treats each bus as independent; the scan task probes all buses in sequence.
+The custom hardware uses 4 physical I²C buses, each expanded via I²C multiplexers to reach more sensors than the address limit of a single bus allows. The firmware treats each bus as independent; the scan task probes all buses in sequence.
 
-At 400 kHz (Fast Mode), each bus can complete one 6-byte read in ~0.2 ms, giving a theoretical maximum of ~5000 reads/second across 4 buses. At the configured rates (100 Hz × 4 ADXL + 10 Hz × 6 LM75 = 460 reads/sec), bus utilisation is well below 10%.
+At 400 kHz (Fast Mode), each bus can complete one 6-byte read in ~0.2 ms, giving a theoretical maximum of ~5000 reads/second across 4 buses. At the configured rates (100 Hz × 4 Sensor-B + 10 Hz × 6 Sensor-A = 460 reads/sec), bus utilisation is well below 10%.
 
 ---
 
