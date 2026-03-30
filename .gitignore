@@ -23,3 +23,11 @@ USB_DEVICE/
 .vscode/
 .settings/
 *.swp
+
+# Notes and articles (not for repo)
+_notes/
+paper/
+NOTES.md
+__pycache__/
+*.pyc
+*.pyo
